@@ -9,6 +9,7 @@ import org.mockito.Mockito;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -18,6 +19,7 @@ class AppHelperAuthorTest {
     Input inputMock;
     PrintStream outDefault;
     ByteArrayOutputStream outMock;
+    AppHelperAuthor appHelperAuthor;
 
     @BeforeEach
     void setUp() {
@@ -25,22 +27,34 @@ class AppHelperAuthorTest {
         outDefault = System.out;
         outMock = new ByteArrayOutputStream();
         System.setOut(new PrintStream(outMock));
+        appHelperAuthor = new AppHelperAuthor(inputMock);
     }
 
     @AfterEach
     void tearDown() {
         inputMock = null;
         System.setOut(outDefault);
-        outMock = null;
+        outMock= null;
     }
 
     @Test
     void create() {
-        when(inputMock.getString()).thenReturn("Lev", "Tolstoy");
-        AppHelperAuthor appHelperAuthor = new AppHelperAuthor(inputMock);
+        when(inputMock.getString()).thenReturn("Lev","Tolstoy");
         Author actual = appHelperAuthor.create();
-        Author expected = new Author("Lev", "Tolstoy");
+        Author expected = new Author("Lev","Tolstoy");
         assertEquals(expected.getAuthorName(), actual.getAuthorName());
         assertEquals(expected.getAuthorSurname(), actual.getAuthorSurname());
+    }
+
+    @Test
+    void printList() {
+        Author author = new Author("Lev","Tolstoy");
+        List<Author> authors = new ArrayList<>();
+        authors.add(author);
+        appHelperAuthor.printList(authors);
+        String actual = outMock.toString();
+        String expected = "1. Lev Tolstoy";
+        assertTrue(actual.contains(expected));
+
     }
 }

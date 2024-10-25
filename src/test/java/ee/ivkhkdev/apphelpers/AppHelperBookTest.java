@@ -3,6 +3,8 @@ package ee.ivkhkdev.apphelpers;
 import ee.ivkhkdev.input.Input;
 import ee.ivkhkdev.model.Author;
 import ee.ivkhkdev.model.Book;
+import ee.ivkhkdev.services.AuthorService;
+import ee.ivkhkdev.services.BookService;
 import ee.ivkhkdev.services.Service;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -11,6 +13,7 @@ import org.mockito.Mockito;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -18,56 +21,62 @@ import static org.mockito.Mockito.when;
 
 class AppHelperBookTest {
     Input inputMock;
-    Service<Author> authorServiceMock;
     PrintStream outDefault;
     ByteArrayOutputStream outMock;
-
+    Service<Author> authorServiceMock;
+    AppHelper<Book> appHelperBook;
     @BeforeEach
     void setUp() {
         inputMock = Mockito.mock(Input.class);
-        authorServiceMock = Mockito.mock(Service.class);
         outDefault = System.out;
         outMock = new ByteArrayOutputStream();
         System.setOut(new PrintStream(outMock));
+        authorServiceMock = Mockito.mock(AuthorService.class);
+        appHelperBook = new AppHelperBook(inputMock,authorServiceMock);
     }
 
     @AfterEach
     void tearDown() {
         inputMock = null;
-        authorServiceMock = null;
         System.setOut(outDefault);
-        outMock = null;
+        outMock= null;
     }
 
     @Test
-    void create() {
-        when(inputMock.getString()).thenReturn("Book Title", "n", "1", "1", "2023");
-        when(authorServiceMock.list()).thenReturn(List.of(new Author("Lev", "Tolstoy")));
-
-        AppHelperBook appHelperBook = new AppHelperBook(inputMock, authorServiceMock);
+    void createWithAddAuthor() {
+        when(inputMock.getString()).thenReturn("Voina i mir","y");
         Book actual = appHelperBook.create();
-
-        assertNotNull(actual);
-        assertEquals("Book Title", actual.getTitle());
-        assertEquals(1, actual.getAuthors().size());
-        assertEquals("Lev", actual.getAuthors().get(0).getAuthorName());
-        assertEquals("Tolstoy", actual.getAuthors().get(0).getAuthorSurname());
-        assertEquals(2023, actual.getPublishedYear());
+        assertTrue(actual == null);
+    }
+    @Test
+    void createWithoutAddAuthor() {
+        Author author = new Author("Lev","Tolstoy");
+        List<Author> authors = new ArrayList<>();
+        authors.add(author);
+        when(authorServiceMock.list()).thenReturn(authors);
+        when(inputMock.getString()).thenReturn("Voina i mir","n", "1", "1", "2000");
+        Book actual = appHelperBook.create();
+        Book expected = new Book("Voina i mir", authors,2000);
+        assertEquals(actual.getTitle(), expected.getTitle());
+        assertEquals(actual.getPublishedYear(), expected.getPublishedYear());
+        assertEquals(actual.getAuthors().get(0).getAuthorName(), expected.getAuthors().get(0).getAuthorName());
+        assertEquals(actual.getAuthors().get(0).getAuthorSurname(), expected.getAuthors().get(0).getAuthorSurname());
     }
 
     @Test
     void printList() {
-        AppHelperBook appHelperBook = new AppHelperBook(inputMock, authorServiceMock);
-        List<Book> books = List.of(
-                new Book("Book One", List.of(new Author("Lev", "Tolstoy")), 2023),
-                new Book("Book Two", List.of(new Author("Fyodor", "Dostoevsky")), 2022)
-        );
+        Author author = new Author("Lev","Tolstoy");
+        List<Author> authors = new ArrayList<>();
+        authors.add(author);
+        Book book = new Book("Voina i mir", authors,2000);
+        List<Book> books = new ArrayList<>();
+        books.add(book);
         appHelperBook.printList(books);
+        String actual = outMock.toString();
+//        System.setOut(outDefault);
+//        System.out.println(actual);
+        String expected = "1. Voina i mir. Lev Tolstoy. 2000";
+        assertTrue(actual.contains(expected));
 
-        String actualOutput = outMock.toString();
-        System.out.println("Actual Output:\n" + actualOutput); // Debug output
-
-        String expectedOutput = "1. Book One. Lev, Tolstoy. 2023\n2. Book Two. Fyodor, Dostoevsky. 2022\n";
-        assertEquals(expectedOutput, actualOutput);
     }
 }

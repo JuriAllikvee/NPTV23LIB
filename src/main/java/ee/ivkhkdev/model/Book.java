@@ -60,10 +60,7 @@ public class Book {
         if (o == null || getClass() != o.getClass()) return false;
 
         Book book = (Book) o;
-        return publishedYear == book.publishedYear &&
-                id.equals(book.id) &&
-                title.equals(book.title) &&
-                Arrays.equals(authors.toArray(), book.authors.toArray());
+        return publishedYear == book.publishedYear && id.equals(book.id) && title.equals(book.title) && Arrays.equals(authors.toArray(), book.authors.toArray());
     }
 
     @Override
